@@ -1,0 +1,346 @@
+---
+title: "DATA-613: Exam 1"
+author: "Cody Meagher"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r}
+# Loading libraries
+library(tidyverse)
+library(epiDisplay)
+library(data.table)
+library(Sleuth3)
+```
+
+# Problem 1
+
+**Read the help page of the gss_cat data frame from the forcast package.**
+
+```{r, message=FALSE}
+# Creating data frame in environment
+gss <- forcats::gss_cat
+```
+
+1.  What are the variables?
+
+The variables in gss_cat are **year, age, marital, race, rincome, partyid, relig, denom, and tvhours.**
+
+2.  What is the class of gss_cat?
+
+```{r}
+# Checking class of the data frame
+class(gss)
+```
+
+gss_cat is a tibble, a subclass of a data frame.
+
+3.  What is the class of each variables?
+
+Year, age, and tvhours are numeric. Marital, race, rincome, partyid, relig, and denom are factors (categorical)..
+
+4.  Reorder the levels of the "relig" variable so the levels are in alphabetical order. Write code that shows the order has been changed. Change order to descending.
+
+```{r}
+# Reordering relig in alphabetical order
+gss$relig <- factor(as.character(gss$relig))
+
+# Checking for alphabetical order
+levels(gss$relig)
+```
+
+```{r}
+# Changing to descending order
+gss$relig <- factor(gss$relig, levels(gss$relig)[15:1])
+
+# Checking for descending order
+levels(gss$relig)
+```
+
+5.  Find the frequency of each category.
+
+```{r}
+# Producing a table showing frequencies of each category of relig
+# using EpiDisplay package which produces a cleaner table
+# table(gss_cat$relig) would also produce the frequencies
+tab1(gss_cat$relig, graph = F)
+```
+
+6.  Put levels in descending order of how frequently each level occurs in the data.
+
+```{r}
+# Ordering levels by frequency
+gss$relig <- fct_infreq(gss$relig)
+
+# Checking for descending order
+levels(gss$relig)
+```
+
+7.  Modify the factor levels of marital to be abbreviations of their long-names. For example, "Divorced" can just be "D".
+
+```{r}
+# Abbreviating levels of marital variable
+levels(gss$marital) <- abbreviate(levels(gss$marital), minlength = 1, 
+                                  use.classes = F, )
+
+# Checking abbreviations
+levels(gss$marital)
+```
+
+# Problem 2
+
+**The first two numbers of the Fibonacci Sequence are 0 and 1. Each succeeding number is the sum of the previous two numbers in the sequence. For example, the third element is 1 = 0 + 1, while the fourth elements is 2 = 1 + 1, and the fifth element is 3 = 2 + 1.**
+
+1.  Use a for loop to calculate the first 100 Fibonacci Numbers.
+
+```{r}
+# Creating vector to use in for loop
+fibo <- numeric(100)
+fibo[1] <- 0
+fibo[2] <- 1
+
+# For loop telling R to modify the 3rd value in the vector to the last
+# by adding the previous two numbers together
+for (i in 3:100)
+{
+  fibo[i] = fibo[i-1]+fibo[i-2] 
+}
+
+# Printing resulting vector
+print(fibo)
+```
+
+2.  Return the first 15 Fibonacci Numbers
+
+```{r}
+# Retrieving the first 15 through element selection
+fibo[1:15]
+```
+
+3.  Write a code that finds the nth Fibonacci Number. What is the 30th Fibonacci Number?
+
+```{r}
+# Calculates the Fibonacci number
+#
+# x: a numeric 
+#
+# returns: the fibonacci number of x
+fiboF <- function(x) {
+  fibo_v = c(0, 1)
+  
+  if (x > 2) {
+      for (i in 3:x) {
+        fibo_v[i] = fibo_v[i - 1] + fibo_v[i - 2]
+      }
+    }
+    fibo_v[x]
+}
+
+fiboF(30)
+```
+
+4.  Sanity Check: The $log_{2}$ of the 100th Fibonacci Number is about 67.57.
+
+```{r}
+# Checking the log2 of the 100th fibonacci number
+log2(fiboF(100))
+```
+
+# Problem 3
+
+**Load the wmata_ridership data frame into R**
+
+1.  Save the data in your local machine in your working directory (use write_csv()).
+
+2.  Upload it into R (use read_csv() and relative path) and name it wmata.
+
+```{r}
+wmata <- read_csv("wmata_ridership.csv")
+```
+
+3.  What are the variables?
+
+The variables are date and the amount of public transport ridership in Washington D.C..
+
+4.  Separate variable Date to year, month, and day.
+
+```{r}
+# Changing Date to a datetime var
+# Creating new variables using lubridate functionality 
+wmata <- wmata %>% 
+  mutate(Date = ymd(Date)) %>% 
+  transmute(year = year(Date),
+            month = month(Date),
+            day = mday(Date),
+            dayofweek = wday(Date),
+            total = Total)
+# Checking
+head(wmata)
+```
+
+5.  For each month, calculate the proportion of rides made on a given day of the month.
+
+```{r}
+# Creating new variable showing the proportion of rides
+# on a given day of the month
+wmata <- wmata %>% 
+  group_by(month) %>% 
+  mutate(percentage = total / sum(total))
+
+head(wmata)
+
+# Visualization
+wmata %>% 
+  ggplot(aes(x = day, y = percentage)) +
+  geom_col() + 
+  facet_wrap(~month)
+```
+
+6.  Make box plots of the proportions of ridership vs. day of the week. Exclude days from 2004.
+
+```{r}
+wmata %>% 
+  filter(year != 2004) %>% 
+  ggplot(aes(y = total)) +
+  geom_boxplot() +
+  facet_grid(~dayofweek)
+```
+
+# Problem 4
+
+1.  Create a new repository in Github. Name it repositoryexam_1
+
+2.  Drag and Drop 3 files from your desktop to your new repository (any files that you think is appropriate)
+
+3.  Take a screenshot of the created repository showing evidence of the three files uploaded.
+
+!("data614_exam14.png")
+
+4.  Now go to the bash terminal and clone the repository back to your Desktop
+
+# Problem 5
+
+1.  Type your PAT token
+
+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
+
+2.  Push the exam_1 file (without solution) to your repositoryexam_1
+
+3.  Take screenshot and post the url of your Github page that shows the file being pushed along with the commit message "Add exam 1 problems set"
+
+# Problem 6 (data.table package)
+
+```{r}
+# Loading data frames
+flights <- data.table(nycflights13::flights)
+airlines <- data.table(nycflights13::airlines)
+```
+
+1.  Add the full airline names to the flights data.table.
+
+```{r}
+# Adding full airline names to flights data.table using a join
+flights <- airlines[flights, on = .(carrier)]
+```
+
+2.  Use data.table to calculate the median air time for each month.
+
+```{r}
+# Calculating median air time by month 
+# Filtered out NAs with !is.na(air_time)
+med_airtime <- flights[!is.na(air_time),
+                       .(med_airtime = median(air_time)), by = month]
+
+# Printing Median Air times by Month
+med_airtime
+```
+
+3.  Use data.table to calculate the number of trips from each airport for the carrier code DL.
+
+```{r}
+# Calculating number of trips from each airport for Delta Airlines
+DL_flights <- flights[carrier == "DL",
+                      .(flight_no = length(carrier)), 
+                      by = origin]
+
+# Printing result
+DL_flights
+```
+
+4.  Calculate the mean departure delay for each origin in the months of January and February.
+
+```{r}
+# Calculating mean departure delay for each origin in January/February
+mean_delay <- flights[month %in% c(1, 2),
+                      .(mean_delay = mean(dep_delay, na.rm = T)),
+                      by = origin]
+
+# Printing result
+mean_delay
+```
+
+# Problem 7
+
+The 2010 General Social Survey asked 1,500 US residents: "Do you think the use of marijuana should be made legal, or not?" 35% of the respondents said it should be made legal.
+
+a.  Is 35% a sample statistic or a population parameter? Explain.
+
+35% is a sample statistic. A statistic is a summary of the data computed from the sample. In this case, 35% of the 1,500 sample of respondents said marijuana should be made illegal (525/1500 people). A population parameter is a number describing the entire population and is often unknown. We can estimate the population parameters with their corresponding sample statistics though which can give us an idea of the true value amongst the population.
+
+b.  Construct a 95% confidence interval for the proportion of US residents who think marijuana should be made legal, and interpret it in the context of the data.
+
+First, I will construct the 95% confidence interval by hand using the formula:
+
+95% Confidence Interval $= .35 \pm 1.96 \sqrt{\frac{.35(1-.35)}{1500}}$
+
+95% Confidence Interval $= .35 \pm 0.024 = (0.326, 0.374)$
+
+Now, I will confirm the results using software:
+
+```{r}
+prop.test(525, 1500, correct = F)
+```
+
+With 95% confidence, the true proportion of US residents who think marijuana should be made legal (in 2010) is between 32.6% and 37.4%.
+
+# Problem 8
+
+Read up on the ex0330 dataset from the Sleuth3 R package. Determine if education level is associated with income. Interpret any estimates and confidence intervals you derive.
+
+```{r}
+# Loading dataset 
+edu_inc <- Sleuth3::ex0330
+```
+
+```{r}
+# Visualizing the association between Education Level and Income
+edu_inc %>% 
+  ggplot(aes(y = Income2005)) +
+  geom_boxplot() +
+  facet_wrap(~Educ)
+```
+
+From the box plot visualization, there appears to be an association between a higher education level and a higher income.
+
+```{r}
+# Analyzing association using a regression model
+eduinc_lm <- lm(Income2005~Educ, data = edu_inc)
+
+# Model summary
+summary(eduinc_lm)
+```
+
+Another way to check for an association is through the creation of a regression model. One notable finding from the model summary is that education has a large positive slope of 8283. In the context of the data, this means when education level is "16", there is a 33,132 increase in income.
+
+```{r}
+hs <- edu_inc %>% 
+  filter(Educ == 12)
+college <- edu_inc %>% 
+  filter(Educ == 16)
+
+t.test(college$Income2005, hs$Income2005)
+```
+
+We can also look at a t.test to see if the difference of means in income are significantly different between the two education groups. From the output, the extremely small p-value indicates a significant difference between the mean income of the groups. The 95% confidence interval is telling us with 95% confidence, the increase in income for the "16" education group from the "12 education group" will be from 26,610.39 to 39,653.77.
+
+There does seem to be a significant association between education level and income in this data set. The box plot visualizations, linear regression model, and t.test all support this finding.
